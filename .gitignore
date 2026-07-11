@@ -1,13 +1,46 @@
-# Virtual environment
-venv/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Jupyter files
+# Jupyter
 .ipynb_checkpoints/
 
-# macOS files
-.DS_Store
+# Virtual Environment
 tf_env/
+venv/
+env/
+.venv/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Build
+build/
+dist/
+
+# Python packaging
+*.egg-info/
+
+# Cache
+.cache/
+
+# Environment variables
+.env
+
+# Pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
