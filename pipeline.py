@@ -5,10 +5,6 @@ from sklearn.preprocessing import MinMaxScaler
 
 RANDOM_SEED = 42
 
-# Load dataset
-df = pd.read_csv("data/diabetes.csv")
-
-# Columns where 0 means missing
 cols_with_missing = [
     "Glucose",
     "BloodPressure",
@@ -17,36 +13,71 @@ cols_with_missing = [
     "BMI"
 ]
 
-# Replace 0 with median
-for col in cols_with_missing:
 
-    median_value = df.loc[df[col] != 0, col].median()
+def preprocess(csv_path):
+    """
+    Loads the diabetes dataset and performs
+    leakage-free preprocessing.
 
-    df[col] = df[col].replace(
-        0,
-        median_value
+    Returns
+    -------
+    X_train
+    X_test
+    y_train
+    y_test
+    """
+
+    # Load dataset
+    df = pd.read_csv(csv_path)
+
+    # Features and Target
+    X = df.drop("Outcome", axis=1)
+    y = df["Outcome"]
+
+    # Train-Test Split FIRST
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.20,
+        stratify=y,
+        random_state=RANDOM_SEED
     )
 
-# Features and Target
-X = df.drop("Outcome", axis=1)
+    # Median Imputation (Training only)
+    for col in cols_with_missing:
 
-y = df["Outcome"]
+        median_value = X_train.loc[
+            X_train[col] != 0,
+            col
+        ].median()
 
-# Min-Max Scaling
-scaler = MinMaxScaler()
+        X_train[col] = X_train[col].replace(
+            0,
+            median_value
+        )
 
-X_scaled = scaler.fit_transform(X)
+        X_test[col] = X_test[col].replace(
+            0,
+            median_value
+        )
 
-# Stratified Split
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled,
-    y,
-    test_size=0.20,
-    stratify=y,
-    random_state=RANDOM_SEED
-)
+    # Scaling (Training only)
+    scaler = MinMaxScaler()
 
-print("Train Shape:", X_train.shape)
-print("Test Shape:", X_test.shape)
+    X_train = scaler.fit_transform(X_train)
 
-print("Pipeline Completed")
+    X_test = scaler.transform(X_test)
+
+    return X_train, X_test, y_train, y_test
+
+
+if __name__ == "__main__":
+
+    X_train, X_test, y_train, y_test = preprocess(
+        "data/diabetes.csv"
+    )
+
+    print("Train Shape:", X_train.shape)
+    print("Test Shape :", X_test.shape)
+
+    print("Pipeline Completed Successfully")
