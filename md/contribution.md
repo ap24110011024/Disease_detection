@@ -1,1 +1,8 @@
-Our system differs from prior work because it focuses on proactive disease detection rather than only predicting diseases after symptoms become severe. While many existing studies emphasize achieving high accuracy on a single model, our approach compares multiple machine learning and deep learning models under the same preprocessing and evaluation framework. We also focus on model interpretability, generalization, and early risk identification, which can help support timely medical intervention and improve healthcare outcomes.
+# Contributions
+
+1. Implemented five baseline machine learning models for diabetes prediction.
+2. Proposed an Adaptive Multi-Layer Perceptron capable of updating with new patient batches.
+3. Developed a proactive disease detection mechanism using rolling-window analysis.
+4. Conducted an ablation study comparing static, adaptive, and proactive configurations.
+5. Validated the framework on the CKD dataset to assess cross-dataset generalization.
+6. Performed statistical significance testing and feature importance analysis.
