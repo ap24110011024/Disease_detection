@@ -1,20 +1,49 @@
-# Project Limitations
+# Limitations
 
-## Current Limitations
+Although the proposed adaptive disease detection framework demonstrated promising performance, several limitations should be considered.
 
-1. The primary experiments were conducted on the Pima Indians Diabetes dataset, with additional validation on the Chronic Kidney Disease (CKD) dataset. Further evaluation on more diverse medical datasets would strengthen the evidence for generalization.
+## 1. Dataset Scope
 
-2. The adaptive learning framework was evaluated using sequential batch updates rather than real-world streaming clinical data. Future work can investigate continuous online learning in practical healthcare environments.
+The proposed framework was evaluated using the Pima Indians Diabetes dataset as the primary benchmark and the Chronic Kidney Disease (CKD) dataset for cross-dataset validation. Although these datasets are widely used in medical machine learning research, they represent only two disease domains. Future work should evaluate the framework on additional public healthcare datasets to assess its generalizability across different diseases and populations.
 
-3. The proactive detection mechanism relies on rolling-window statistics and threshold-based decision strategies. More advanced temporal models, such as recurrent or transformer-based architectures, could be explored in future work.
+---
 
-4. Hyperparameter optimization was performed using GridSearchCV for selected models. Automated optimization methods such as Bayesian Optimization or Optuna may further improve performance.
+## 2. Statistical Significance
 
-5. This work focuses on structured tabular clinical data. Future extensions could integrate multimodal data, including medical imaging, laboratory reports, wearable sensor data, and electronic health records.
+The Adaptive MLP framework was compared with the Random Forest baseline using McNemar's statistical significance test.
 
-## Future Work
+The obtained p-value was: p = 0.263
 
-- Evaluate the framework on additional disease datasets.
-- Investigate continual learning techniques for real-time clinical deployment.
-- Compare the proposed adaptive framework with recent deep learning and continual learning approaches.
-- Develop a clinician-friendly dashboard for real-time disease risk monitoring.
+Since the p-value is greater than the conventional significance threshold (0.05), the observed performance difference between the Adaptive MLP and Random Forest models is **not statistically significant** on the Pima Diabetes dataset.
+
+This result suggests that additional experiments using larger and more diverse datasets are required before concluding that adaptive learning consistently outperforms conventional machine learning models.
+
+---
+
+## 3. Adaptive Learning Performance
+
+The corrected ablation study reports the **mean performance across all adaptive batches** rather than the final batch alone.
+
+Under this evaluation protocol, the Adaptive MLP did not outperform the Static MLP baseline in terms of overall Accuracy or F1 Score. However, the Adaptive + Proactive framework achieved substantially higher Recall, indicating improved sensitivity for identifying positive disease cases.
+
+This trade-off is consistent with the objective of proactive disease detection, where reducing false negatives is often more important than maximizing overall classification accuracy.
+
+---
+
+## 4. Batch-Based Evaluation
+
+The adaptive framework currently performs model updates using fixed sequential batches rather than a continuous real-time data stream.
+
+Future work can extend the framework to support true online learning and streaming clinical data environments.
+
+---
+
+## 5. Future Work
+
+Several directions can further improve the proposed framework:
+
+- Evaluation on additional medical datasets.
+- Integration with deep learning architectures.
+- Real-time online adaptive learning.
+- Multi-disease prediction within a unified framework.
+- Clinical validation using hospital data.
