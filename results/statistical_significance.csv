@@ -1,2 +1,2 @@
 Comparison,P_value,Significant
-Adaptive MLP vs Random Forest,0.26317596435546875,False
+MLP vs Random Forest,0.26317596435546875,False

@@ -1,3 +1,3 @@
 Dataset,Model,Accuracy,Precision,Recall,F1
 Pima Diabetes,Adaptive + Proactive,0.65,0.4853,0.8046,0.5979
-CKD,Adaptive MLP,1.0,1.0,1.0,1.0
+CKD,Adaptive MLP,0.975,0.9666666666666667,0.9666666666666667,0.9666666666666667

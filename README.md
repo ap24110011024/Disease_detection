@@ -158,9 +158,9 @@ The models were evaluated using:
 
 | Configuration | Precision | Recall | F1 Score |
 |---------------|----------:|-------:|---------:|
-| Static MLP | 0.6818 | 0.5556 | 0.6122 |
-| Adaptive MLP | 0.7000 | 0.6100 | 0.6500 |
-| Adaptive + Proactive | 0.5294 | 0.7826 | 0.6316 |
+| Static MLP | 0.6415 | 0.6296 | 0.6355 |
+| Adaptive MLP | 0.6635 | 0.4655 | 0.5232 |
+| Adaptive + Proactive | 0.4853 | 0.8046 | 0.5979 |
 
 ---
 
