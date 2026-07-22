@@ -1,6 +1,6 @@
 model,accuracy,precision,recall,f1,auc_roc
-Logistic Regression,0.7143,0.6087,0.5185,0.56,0.823
+Logistic Regression,0.7078,0.6047,0.4815,0.5361,0.807
 Decision Tree,0.7857,0.6981,0.6852,0.6916,0.7887
-Random Forest,0.7662,0.6957,0.5926,0.64,0.8178
+Random Forest,0.7662,0.6957,0.5926,0.64,0.8179
 Support Vector Machine,0.7078,0.6047,0.4815,0.5361,0.8169
 Multi-Layer Perceptron,0.7273,0.6304,0.537,0.58,0.84
