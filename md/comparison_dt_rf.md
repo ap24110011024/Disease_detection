@@ -8,7 +8,7 @@
 | F1 Score  | 0.6452 | 0.6214 |
 | AUC ROC   | 0.8056 | 0.8143 |
 
-*Numbers taken from `results/canonical_baseline_results.csv`. Both models use `random_state=42`. The Decision Tree is tuned using 5-fold GridSearchCV with F1-score as the optimization metric.*
+*Numbers taken from `results/result/canonical_baseline_results.csv`. Both models use `random_state=42`. The Decision Tree is tuned using 5-fold GridSearchCV with F1-score as the optimization metric.*
 
 ---
 
