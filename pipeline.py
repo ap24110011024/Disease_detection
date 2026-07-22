@@ -14,10 +14,42 @@ cols_with_missing = [
 ]
 
 
-def preprocess(csv_path):
+def impute_zeros_median(X_train, X_test, cols=cols_with_missing):
+    """
+    Median-imputes Pima's biologically-impossible zero values, fitting
+    the median on X_train only and applying it to both X_train and X_test.
+
+    Reusable building block: also used by notebooks that do their own
+    scaling and/or their own batch/window splitting (week4_mlp,
+    adaptive_mlp, proactive_detection), where a fresh median needs to be
+    fit at each batch/split boundary rather than a single global split.
+    """
+    for col in cols:
+
+        median_value = X_train.loc[
+            X_train[col] != 0,
+            col
+        ].median()
+
+        X_train[col] = X_train[col].replace(0, median_value)
+        X_test[col] = X_test[col].replace(0, median_value)
+
+    return X_train, X_test
+
+
+def preprocess(csv_path, scale=True):
     """
     Loads the diabetes dataset and performs
-    leakage-free preprocessing.
+    leakage-free preprocessing: split first, then median-impute
+    (fit on train only), then optionally MinMax-scale (fit on train only).
+
+    Parameters
+    ----------
+    scale : bool
+        If True (default), returns MinMax-scaled numpy arrays. If False,
+        returns imputed-but-unscaled DataFrames, for notebooks that
+        already do their own MinMaxScaler fit_transform/transform
+        downstream and would otherwise double-scale the data.
 
     Returns
     -------
@@ -44,22 +76,10 @@ def preprocess(csv_path):
     )
 
     # Median Imputation (Training only)
-    for col in cols_with_missing:
+    X_train, X_test = impute_zeros_median(X_train, X_test)
 
-        median_value = X_train.loc[
-            X_train[col] != 0,
-            col
-        ].median()
-
-        X_train[col] = X_train[col].replace(
-            0,
-            median_value
-        )
-
-        X_test[col] = X_test[col].replace(
-            0,
-            median_value
-        )
+    if not scale:
+        return X_train, X_test, y_train, y_test
 
     # Scaling (Training only)
     scaler = MinMaxScaler()

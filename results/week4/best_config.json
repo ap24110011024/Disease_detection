@@ -8,5 +8,5 @@
     "optimizer": "Adam",
     "epochs": 50,
     "batch_size": 32,
-    "best_validation_accuracy": 0.8211382031440735
+    "best_validation_accuracy": 0.8130081295967102
 }
