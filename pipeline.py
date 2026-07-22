@@ -74,7 +74,7 @@ def preprocess(csv_path):
 if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = preprocess(
-        "data/diabetes.csv"
+        "data/raw/diabetes.csv"
     )
 
     print("Train Shape:", X_train.shape)
