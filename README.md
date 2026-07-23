@@ -96,12 +96,12 @@ Every result below was verified by deleting all generated files (`results_log.cs
 | Logistic Regression | 0.7078 | 0.6047 | 0.4815 | 0.5361 | 0.8070 |
 | Decision Tree | 0.7857 | 0.6981 | 0.6852 | 0.6916 | 0.7887 |
 | Random Forest | 0.7662 | 0.6957 | 0.5926 | 0.6400 | 0.8179 |
-| SVM | 0.7078 | 0.6047 | 0.4815 | 0.5361 | 0.8167 |
+| SVM | 0.7078 | 0.6047 | 0.4815 | 0.5361 | 0.8169 |
 | Static MLP | 0.7273 | 0.6304 | 0.5370 | 0.5800 | 0.8400 |
 
 *Source: `results/canonical_baseline_results.csv`, derived programmatically from `results/results_log.csv` — never hand-typed. `random_state=42` throughout.*
 
-A pairwise McNemar's test between Random Forest and an MLP classifier gives **p = 0.503** — the difference between these two models is not statistically significant on this split (`results/statistical_significance.csv`). Note: this compares freshly-trained sklearn `RandomForestClassifier`/`MLPClassifier` instances, not the exact tuned models reported in the table above, and the p-value can vary somewhat between runs.
+A pairwise McNemar's test between Random Forest and an MLP classifier gives **p = 0.263** — the difference between these two models is not statistically significant on this split (`results/week5/statistical_significance.csv`). Note: this compares freshly-trained sklearn `RandomForestClassifier`/`MLPClassifier` instances, not the exact tuned models reported in the table above, and the p-value can vary somewhat between runs.
 
 ### Ablation study
 
@@ -119,11 +119,13 @@ With architecture and epoch count held constant across all three configurations,
 
 | Experiment | Accuracy | Precision | Recall | F1 | AUC |
 |---|---|---|---|---|---|
-| Adaptive MLP trained natively on CKD | 0.9875 | 1.0000 | 0.9800 | 0.9899 | 1.0000 |
+| Adaptive MLP trained natively on CKD | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 | Random Forest trained & tested on CKD | 0.9750 | 0.9615 | 1.0000 | 0.9804 | 0.9993 |
 | 3-seed validation (mean, seeds 42/7/123) | 0.9917 | 0.9872 | 1.0000 | 0.9935 | — |
 
-*Sources: `results/week6/ckd_adaptive_mlp_result.csv`, `results/week6/ckd_rf_result.csv`, `results/canonical_ckd_multiseed_results.csv`. All three use imputation fit on the training fold only (per seed, for the multi-seed check) — not a pre-imputed file. Performance held up after this leakage was removed, which is itself evidence that CKD's near-perfect separability is a property of the dataset, not an artifact of leaky preprocessing.*
+*Sources: `results/week6/ckd_adaptive_mlp_result.csv`, `results/week6/ckd_rf_result.csv`, `results/canonical_ckd_multiseed_results.csv`. All three use imputation fit on the training fold only (per seed, for the multi-seed check) — not a pre-imputed file.*
+
+*The Adaptive MLP number above reflects a fix: `ckd/adaptive_mlp.ipynb` originally picked its "best" model across training batches by scoring each candidate against `X_test`/`y_test` — the batch loop was peeking at the test set before the final evaluation cell ever ran. It now carves a stratified 80/20 validation split out of the training data alone (`X_train_fit`/`X_val`, `random_state=42`) and selects "best" using validation F1; `X_test`/`y_test` are touched exactly once, in the final evaluation cell, after `best_model` is already frozen. The result is still a perfect 1.0 across the board — a number worth distrusting on sight for a 400-row dataset, so we checked it directly rather than asserting it. See [`md/ckd_leakage_check.md`](md/ckd_leakage_check.md) and `results/week6/ckd_feature_auc.csv`: zero duplicate rows in the raw data, zero overlap between the processed train/test split, and no single feature reaches 1.0 alone (hemoglobin, the strongest, tops out at AUC 0.968). The perfect score comes from the combination of several correlated clinical features, consistent with this UCI dataset's well-documented near-linear separability, not a new leak.*
 
 ---
 
@@ -172,8 +174,8 @@ Every number in this README was confirmed by deleting all generated output and r
 
 | Category | Notebooks | Seed status |
 |---|---|---|
-| Sklearn baselines | `logistic_regression`, `decision_tree`, `random_forest`, `svm_model`, `ckd/random_forest`, `statistical_significance` | `random_state=42` |
-| Neural nets (Keras/TF) | `week4_mlp`, `adaptive_mlp`, `proactive_detection`, `ckd/adaptive_mlp` | `random.seed`, `np.random.seed`, `tf.random.set_seed` fixed to 42 |
+| Sklearn baselines | `logistic_regression`, `decision_tree`, `random_forest`, `svm_model`, `ckd/random_forest`, `ckd/adaptive_mlp`, `statistical_significance` | `random_state=42` |
+| Neural nets (Keras/TF) | `week4_mlp`, `adaptive_mlp`, `proactive_detection` | `random.seed`, `np.random.seed`, `tf.random.set_seed` fixed to 42 |
 | Deliberately multi-seed | `ckd/multiseed_validation` | Seeds 42, 7, 123 |
 | Pure EDA / aggregation | `eda.ipynb` (both), `ckd/preprocessing`, `roc_all_models`, `error_analysis` | No training, no seed needed |
 | **Open item** | `linear_regression_scratch.ipynb` | No seed set — a from-scratch educational implementation, not a reported result |
@@ -206,6 +208,7 @@ Full discussion in [`md/limitations.md`](md/limitations.md). Stated plainly here
 | [`md/limitations.md`](md/limitations.md) | Full limitations discussion |
 | [`md/report_eda.md`](md/report_eda.md) | Exploratory data analysis writeup |
 | [`md/comparison_dt_rf.md`](md/comparison_dt_rf.md) | Head-to-head Decision Tree vs. Random Forest comparison |
+| [`md/ckd_leakage_check.md`](md/ckd_leakage_check.md) | Duplicate-row and feature-separability check behind the CKD 1.0 scores |
 | [`paper/`](paper/) | Paper drafts and replication notes |
 
 ## Citation
