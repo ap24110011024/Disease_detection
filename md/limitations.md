@@ -65,7 +65,7 @@ The proposed framework has been evaluated using retrospective benchmark datasets
 
 - Logistic Regression and Support Vector Machine produce identical Accuracy, Precision, Recall, and F1-score values on the current test split. Verification confirmed that both models generate the same confusion matrix (**TN = 83, FP = 17, FN = 28, TP = 26**). The SVM implementation (`SVC(kernel="rbf", probability=True, random_state=42)`) is correct, and the difference in ROC-AUC arises solely from differences in probability estimates rather than binary class predictions.
 
-- McNemar's test comparing the Static MLP and the proposed Adaptive + Proactive framework produced a **p-value of 0.7744**, which exceeds the conventional significance threshold of 0.05. Consequently, although the proposed framework exhibits a different operating point with higher Recall, the observed improvement is **not statistically significant** on the current test split. Future work will include multi-seed evaluation and larger datasets to provide stronger statistical evidence.
+- McNemar's test comparing the Static MLP and the proposed Adaptive + Proactive framework produced a **p-value of 0.7905**, which exceeds the conventional significance threshold of 0.05. Consequently, although the proposed framework exhibits a different operating point with higher Recall, the observed improvement is **not statistically significant** on the current test split. Future work will include multi-seed evaluation and larger datasets to provide stronger statistical evidence.
 
 
 # Future Work

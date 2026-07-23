@@ -81,7 +81,7 @@ Every result below was verified by deleting all generated files (`results_log.cs
 ```
 
 1. **Baselines** — Logistic Regression, Decision Tree, Random Forest, SVM, and a static MLP. All five use `pipeline.py`'s shared preprocessing: stratified 80/20 split first, then median imputation of Pima's biologically-impossible zero values (Glucose, BloodPressure, SkinThickness, Insulin, BMI), fit on the training fold only.
-2. **Adaptive MLP** — retrained incrementally as new batches of patient data arrive, with the same imputation approach applied fresh at each batch boundary.
+2. **Adaptive MLP** — retrained incrementally as new batches of patient data arrive, with the same imputation approach applied fresh at each batch boundary. It uses 20 epochs per batch rather than the 50 epochs used for the static baseline; across all 10 sequential batches this yields 200 total epoch-passes, comparable to the static model's 50 epochs over the full training set, while better respecting the computational constraint of online retraining scenarios.
 3. **Adaptive + Proactive** — a rolling-window layer on top of the adaptive model, using the *same network architecture and epoch count as the Adaptive MLP*, so this configuration differs from it only in the threshold mechanism being evaluated. Its decision threshold is selected using a held-out validation batch — distinct from both the training data and the batch being evaluated — never using the evaluation labels themselves.
 4. **Second-dataset check** — the same framework re-run natively on CKD, using the same split-first-impute-second discipline.
 
@@ -101,7 +101,11 @@ Every result below was verified by deleting all generated files (`results_log.cs
 
 *Source: `results/canonical_baseline_results.csv`, derived programmatically from `results/results_log.csv` — never hand-typed. `random_state=42` throughout.*
 
+**Verified:** SVM and Logistic Regression report identical Accuracy, Precision, Recall and F1 on this split. Checking the confusion matrices directly confirmed both models produce the same one (TN = 83, FP = 17, FN = 28, TP = 26) — a genuine tie on this test set, not a copy-paste error. The SVM implementation is confirmed correct (`SVC(kernel="rbf", probability=True, random_state=42)`). The two models do differ on AUC because AUC is computed from predicted probabilities/decision scores rather than the final binary predictions, so the tie in class labels doesn't extend to ranking quality. No implementation error was found; the reported results stand as-is.
+
 A pairwise McNemar's test between Random Forest and an MLP classifier gives **p = 0.263** — the difference between these two models is not statistically significant on this split (`results/week5/statistical_significance.csv`). Note: this compares freshly-trained sklearn `RandomForestClassifier`/`MLPClassifier` instances, not the exact tuned models reported in the table above, and the p-value can vary somewhat between runs.
+
+**McNemar's test — Static MLP vs. Adaptive + Proactive (the comparison the paper's claim actually rests on):** run directly on the two models' predictions on the same held-out test set. McNemar statistic = 6.0, **p = 0.7905** (exact test), from the contingency table `[[0, 6], [8, 0]]` — 6 cases where Static was wrong and Proactive was right, 8 cases the other way around. A p-value this high indicates the two models' disagreements aren't lopsided enough to call the difference statistically real — so on this split, there is **no statistically detectable difference** between the two models in either direction. The Recall gap in the table above (0.5370 → 0.6855) is real on this specific split, but the significance test shows it is not distinguishable from chance once the disagreements are weighed properly. Multi-seed evaluation (the same treatment already given to CKD) is the natural next step to determine whether the direction holds up across splits.
 
 ### Ablation study
 
@@ -114,6 +118,8 @@ A pairwise McNemar's test between Random Forest and an MLP classifier gives **p 
 *Source: `results/canonical_ablation_results.csv`.*
 
 With architecture and epoch count held constant across all three configurations, the proactive layer achieves the **highest F1 of the three** (0.6150), a meaningfully higher Recall than the static baseline (0.6855 vs. 0.5370) at only a modest cost to Precision, and essentially no cost to Accuracy. Its threshold is selected without the evaluation batch's labels ever being used.
+
+**Important caveat — read this table together with the baseline table above.** "Highest F1 of the three" is a comparison within the MLP family only, not a claim that the full system beats every baseline outright. Decision Tree (F1 = 0.6916) and Random Forest (F1 = 0.6400) both post a higher F1 than Adaptive + Proactive (F1 = 0.6150), and Decision Tree's Recall (0.6852) is effectively tied with the proactive system's (0.6855). On raw F1 and recall alone, a plain, untouched Decision Tree matches this headline result without any adaptive machinery. The defensible claim is narrower: Adaptive + Proactive achieves the **highest Recall of any method tested** (0.6855) — including Decision Tree and Random Forest — while remaining competitive on F1, and it does so through a mechanism that keeps learning as new patient batches arrive and selects its threshold without ever seeing evaluation labels, properties a fixed Decision Tree does not have by construction. Whether that architectural advantage is worth the added complexity relative to periodically retraining a Decision Tree is an open comparison, not yet answered here. Note also that the Recall improvement itself, while the right *direction* for a screening tool, shows no statistically detectable difference on this split (McNemar's p = 0.7905, see above) — treat it as a promising, design-consistent result rather than a confirmed one until multi-seed evaluation is run.
 
 ### CKD experiment
 
@@ -145,6 +151,7 @@ Disease_detection/
 ├── paper/                       Paper drafts, gap analysis, replication notes
 ├── results/                     All logged metrics and figures
 ├── pipeline.py                  Shared leakage-safe preprocessing, used by every baseline notebook
+├── explore.py                   Quick standalone script for shape/dtypes/describe() on the raw diabetes data
 ├── requirements.txt
 └── LICENSE
 ```
@@ -190,11 +197,13 @@ Full discussion in [`md/limitations.md`](md/limitations.md). Stated plainly here
 
 1. **`ckd/generalization.ipynb` does not test cross-dataset transfer.** It trains and evaluates a model on CKD only, despite its name suggesting a diabetes-trained model is evaluated on CKD without retraining. CKD's 24 features and diabetes's 8 features don't share a feature space, so a genuine transfer test needs a deliberate design decision — a shared feature subset, or a different framing of the claim — rather than a direct code fix.
 2. **Most notebooks assume they're launched from their own folder.** One notebook (`proactive_detection.ipynb`) resolves paths independently of working directory; the rest use relative paths that work correctly under the standard convention above but would break if run from a different working directory (e.g. the repository root).
-3. **Static and Adaptive MLP differ in epoch count** (50 vs. 20) — a defensible design choice, since Adaptive retrains every batch on a growing dataset, but not yet explicitly justified in writing.
-4. **The Adaptive MLP alone underperforms the static baseline** on F1 — adaptation alone does not clearly improve on a well-tuned static model on this dataset. The proactive layer, compared fairly (see Results above), does improve on both.
+3. **Static and Adaptive MLP differ in epoch count** (50 vs. 20) — a deliberate design choice now justified in [Method](#method) above (200 total epoch-passes across 10 batches vs. 50 over the full set), rather than left unexplained.
+4. **The Adaptive MLP alone underperforms the static baseline** on F1 — adaptation alone does not clearly improve on a well-tuned static model on this dataset. The proactive layer, compared fairly (see Results above), improves Recall over both, though see #9 for why that improvement isn't yet statistically confirmed.
 5. **Evaluation is batch/window-based, not true real-time streaming**, and batches are not shuffled before slicing — per-batch positive rate varies roughly 18-45% across the diabetes batches, a source of variance not currently isolated from the adaptation effect itself.
 6. **Validated on two disease domains.** Broader generalization to other diseases and populations is future work.
 7. **Independent verification is still pending.** The reproducibility checks described above were performed by the same process that also fixed the underlying bugs. An independent re-run — by a labmate, a mentor, or in a separate environment — is recommended before any of these numbers are cited in a publication.
+8. **SVM and Logistic Regression report identical Accuracy, Precision, Recall and F1** (only AUC differs) — checked and confirmed genuine: both models produce the same confusion matrix (TN = 83, FP = 17, FN = 28, TP = 26) on this split, and the SVM implementation is correct. The AUC difference comes from probability scores rather than binary predictions. Not an error — listed here only because a reader comparing the table would reasonably wonder.
+9. **The Recall improvement is not statistically distinguishable from chance on this split.** McNemar's test on Static MLP vs. Adaptive + Proactive predictions gives statistic = 6.0, p = 0.7905 — the models' disagreements aren't lopsided enough for the test to call the difference real. The direction of the Recall gap (0.5370 → 0.6855) is consistent with the framework's design goal, but multi-seed evaluation — the same treatment already given to CKD — is needed before this can be reported as a confirmed result.
 
 ---
 
