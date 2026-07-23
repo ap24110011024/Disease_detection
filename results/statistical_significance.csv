@@ -1,2 +1,3 @@
 Comparison,P_value,Significant
 MLP vs Random Forest,0.26317596435546875,False
+Static MLP vs Adaptive+Proactive,0.7905,False
